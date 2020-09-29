@@ -41,32 +41,34 @@ class Bird:
     def __init__(self, x, y):
         self.x = x
         self.y = y
-        self.birdMovement = 0
+        self.movement = 0
         self.index = 0
         self.surface = Bird.images[self.index]
         self.rect = self.surface.get_rect(center = (self.x,self.y))
     
     def move(self):
-        self.birdMovement += Bird.gravity
-        self.rect.centery += self.birdMovement
+        self.movement += Bird.gravity
+        self.rect.centery += self.movement
     
     def jump(self):
-        self.birdMovement = 0
-        self.birdMovement -= 5
+        self.movement = 0
+        self.movement -= 5
     
     def draw(self, screen):
         self.surface = Bird.images[self.index]
         screen.blit(self.rotate(), self.rect)
     
     def rotate(self):
-        newSurface = pygame.transform.rotozoom(self.surface, -self.birdMovement * 3, 1)
+        newSurface = pygame.transform.rotozoom(self.surface, -self.movement * 5, 1)
         return newSurface
     
     def animate(self):
-        if self.index < 2:
-            self.index += 1
-        else:
-            self.index = 0
+        if self.movement <= 5:
+            if self.index < 2:
+                self.index += 1
+            else:
+                self.index = 0
+        
     
 
 bird0 = Bird(50,HEIGHT/2)
