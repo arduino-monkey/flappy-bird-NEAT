@@ -4,6 +4,7 @@ pygame.init()
 WIDTH = 432
 HEIGHT = 768
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption('Flappy Bird')
 clock = pygame.time.Clock()
 
 def scaleSurface(surface):
@@ -20,7 +21,7 @@ bgSurface = scaleSurface(bgSurface)
 
 bird0 = pygame.image.load('assets/yellowbird-downflap.png') 
 bird1 = pygame.image.load('assets/yellowbird-midflap.png')
-bird2 = pygame.image.load('assets/yellowbird-downflap.png')
+bird2 = pygame.image.load('assets/yellowbird-upflap.png')
 
 bird0 = scaleSurface(bird0)
 bird1 = scaleSurface(bird1)
@@ -30,8 +31,12 @@ birdImages = [bird0,bird1,bird2]
 
 class Bird:
     images = birdImages
-    animationTime = 200
     gravity = 0.25
+
+    animationTime = 200
+    BIRDFLAP = pygame.USEREVENT
+    pygame.time.set_timer(BIRDFLAP, animationTime)
+
 
     def __init__(self, x, y):
         self.x = x
@@ -50,16 +55,20 @@ class Bird:
         self.birdMovement -= 5
     
     def draw(self, screen):
-        # if self.index < 2:
-        #     self.index += 1
-        # else:
-        #     self.index = 0
+        self.surface = Bird.images[self.index]
         screen.blit(self.rotate(), self.rect)
     
     def rotate(self):
         newSurface = pygame.transform.rotozoom(self.surface, -self.birdMovement * 3, 1)
         return newSurface
     
+    def animate(self):
+        if self.index < 2:
+            self.index += 1
+        else:
+            self.index = 0
+    
+
 bird0 = Bird(50,HEIGHT/2)
 bird1 = Bird(150,HEIGHT/2)
 bird2 = Bird(250,HEIGHT/2)
@@ -70,11 +79,17 @@ while True:
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
-        if event.type == pygame.KEYDOWN:
+
+        if event.type == pygame.KEYUP:
             if event.key == pygame.K_SPACE:
                 bird0.jump()
                 bird1.jump()
                 bird2.jump()
+        
+        if event.type == Bird.BIRDFLAP:
+            bird0.animate()
+            bird1.animate()
+            bird2.animate()
     bird0.move()
     bird1.move()
     bird2.move()
