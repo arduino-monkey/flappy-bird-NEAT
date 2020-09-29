@@ -19,6 +19,14 @@ bgSurface = pygame.image.load('assets/background-night.png')
 bgSurface = scaleSurface(bgSurface)
 
 
+bottomPipeSurface = pygame.image.load('assets/pipe-green.png')
+bottomPipeSurface = scaleSurface(bottomPipeSurface)
+
+topPipeSurface = pygame.transform.flip(bottomPipeSurface, False, True)
+
+pipeHeight = topPipeSurface.get_height()
+
+
 bird0 = pygame.image.load('assets/yellowbird-downflap.png') 
 bird1 = pygame.image.load('assets/yellowbird-midflap.png')
 bird2 = pygame.image.load('assets/yellowbird-upflap.png')
@@ -63,19 +71,43 @@ class Bird:
         return newSurface
     
     def animate(self):
-        if self.movement <= 5:
+        if self.movement <= 3:#flaps only if gowing up 
             if self.index < 2:
                 self.index += 1
             else:
                 self.index = 0
         
+class Pipe:
+    gap = 200
+    vel = 5
+
+    def __init__(self, x):
+        self.x = x
+        #when referring to pipe Y co-ordintates I mean y of top left
+        #if size of screen changes the values of the random function also need to change
+        #can be derived through this formula
+        #screenHeight - (pipeSurfaceHeight+gap b/w the pipes)
+        self.topPipeY = -random.randint(88,392)
+        self.bottomPipeY = pipeHeight + self.topPipeY + Pipe.gap
+        
+        self.topRect = topPipeSurface.get_rect(topleft=(self.x,self.topPipeY))
+        self.bottomRect = bottomPipeSurface.get_rect(topleft=(self.x,self.bottomPipeY))
+
+    def draw(self, screen):
+        screen.blit(topPipeSurface, self.topRect)
+        screen.blit(bottomPipeSurface, self.bottomRect)
     
+    def move(self):
+        self.x -= Pipe.vel
+        
+
+
 
 bird0 = Bird(50,HEIGHT/2)
 bird1 = Bird(150,HEIGHT/2)
 bird2 = Bird(250,HEIGHT/2)
 
-
+pipe = Pipe(300)
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -89,7 +121,7 @@ while True:
                 bird2.jump()
         
         if event.type == Bird.BIRDFLAP:
-            bird0.animate()
+            bird0.animate() 
             bird1.animate()
             bird2.animate()
     bird0.move()
@@ -97,7 +129,7 @@ while True:
     bird2.move()
 
     screen.blit(bgSurface,(0,0))
-
+    pipe.draw(screen)
     bird0.draw(screen)
     bird1.draw(screen)
     bird2.draw(screen)
