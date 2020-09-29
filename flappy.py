@@ -38,7 +38,7 @@ class Bird:
         self.y = y
         self.birdMovement = 0
         self.index = 0
-        self.surface = Bird.images[0]
+        self.surface = Bird.images[self.index]
         self.rect = self.surface.get_rect(center = (self.x,self.y))
     
     def move(self):
@@ -50,12 +50,21 @@ class Bird:
         self.birdMovement -= 5
     
     def draw(self, screen):
-        screen.blit(self.surface, self.rect)
+        # if self.index < 2:
+        #     self.index += 1
+        # else:
+        #     self.index = 0
+        screen.blit(self.rotate(), self.rect)
+    
+    def rotate(self):
+        newSurface = pygame.transform.rotozoom(self.surface, -self.birdMovement * 3, 1)
+        return newSurface
+    
+bird0 = Bird(50,HEIGHT/2)
+bird1 = Bird(150,HEIGHT/2)
+bird2 = Bird(250,HEIGHT/2)
 
 
-bird = Bird(50,HEIGHT/2)
-bird1 = Bird(100,HEIGHT/2)
-bird2 = Bird(150,HEIGHT/2)
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -63,16 +72,16 @@ while True:
             sys.exit()
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
-                bird.jump()
+                bird0.jump()
                 bird1.jump()
                 bird2.jump()
-    bird.move()
+    bird0.move()
     bird1.move()
     bird2.move()
 
     screen.blit(bgSurface,(0,0))
 
-    bird.draw(screen)
+    bird0.draw(screen)
     bird1.draw(screen)
     bird2.draw(screen)
     pygame.display.flip()
