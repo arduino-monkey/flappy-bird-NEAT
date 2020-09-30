@@ -87,6 +87,7 @@ class Pipe:
 
     def __init__(self, x):
         self.x = x
+        self.passed = False
         #when referring to pipe Y co-ordintates I mean y of top left
         #if size of screen changes the values of the random function also need to change
         #can be derived through this formula
@@ -134,6 +135,7 @@ class Floor:
 bird = Bird(50,HEIGHT/2)                         
 floor = Floor() 
 pipes = [Pipe(700)]
+score = 0
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -149,6 +151,8 @@ while True:
     
     bird.move()
     floor.move()
+
+    addPipe = False
     for pipe in pipes[:]:
         pipe.move()
         if pipe.collide(bird):
@@ -156,8 +160,12 @@ while True:
             sys.exit()
         if pipe.x + pipeWidth < 0:
             pipes.remove(pipe)
-         
-            print(pipes)
+            
+        if pipe.passed == False and pipe.x < bird.x:
+            score += 1
+            pipe.passed = True
+            pipes.append(Pipe(400))
+
     
     screen.blit(bgSurface,(0,0))         
     
