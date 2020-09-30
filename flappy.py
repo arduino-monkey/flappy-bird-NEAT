@@ -29,11 +29,11 @@ bottomPipeSurface = scaleSurface(bottomPipeSurface)
 topPipeSurface = pygame.transform.flip(bottomPipeSurface, False, True)
 
 pipeHeight = topPipeSurface.get_height()
+pipeWidth = topPipeSurface.get_width()
 
-
-bird0 = pygame.image.load('assets/yellowbird-downflap.png') 
-bird1 = pygame.image.load('assets/yellowbird-midflap.png')
-bird2 = pygame.image.load('assets/yellowbird-upflap.png')
+bird0 = pygame.image.load('assets/yellowbird-downflap.png').convert_alpha()
+bird1 = pygame.image.load('assets/yellowbird-midflap.png').convert_alpha()
+bird2 = pygame.image.load('assets/yellowbird-upflap.png').convert_alpha()
 
 bird0 = scaleSurface(bird0)
 bird1 = scaleSurface(bird1)
@@ -74,15 +74,12 @@ class Bird:
         newSurface = pygame.transform.rotozoom(self.surface, -self.movement * 5, 1)
         return newSurface
     
-    def animate(self):
+    def animate(self):         
         if self.movement <= 3:#flaps only if gowing up 
             if self.index < 2:
                 self.index += 1
             else:
                 self.index = 0
-    
-    def getMask(self):
-        return pygame.mask.from_surface(self.surface)
 
 class Pipe:
     gap = 200
@@ -110,17 +107,10 @@ class Pipe:
         self.bottomRect.left = self.x
     
     def collide(self, bird):
-        birdMask = bird.getMask()
-        topOffset = (self.x - bird.x, self.topPipeY - round(bird.y))
-        bottomOffset = (self.x - bird.x, self.bottomPipeY - round(bird.y))
-
-        topPipeMask = pygame.mask.from_surface(topPipeSurface)
-        bottomPipeMask = pygame.mask.from_surface(bottomPipeSurface)
-
-        bottomOverlap = birdMask.overlap(bottomPipeMask, bottomOffset)
-        topOverlap = birdMask.overlap(topPipeMask, topOffset)
-
-        if bottomOverlap or topOverlap:
+        birdRect = bird.rect
+        bottomCollision = birdRect.colliderect(self.bottomRect)
+        topCollision =  birdRect.colliderect(self.topRect)       
+        if  topCollision or bottomCollision or birdRect.top <= -100 or birdRect.bottom >= Floor.y:
             return True
         else:
             return False
@@ -135,22 +125,15 @@ class Floor:
         else:
             Floor.x -= Floor.vel
     
-    def draw(self):
+    def draw(self, screen):
         screen.blit(floorSurface, (Floor.x,Floor.y))
         screen.blit(floorSurface, (Floor.x + WIDTH, Floor.y))
 
 
 
-
-
-
-bird0 = Bird(50,HEIGHT/2)
-# bird1 = Bird(150,HEIGHT/2)
-# bird2 = Bird(250,HEIGHT/2)
-
-pipe = Pipe(300)
+bird = Bird(50,HEIGHT/2)                         
 floor = Floor() 
-
+pipes = [Pipe(700)]
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -159,26 +142,34 @@ while True:
 
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_SPACE:
-                bird0.jump()
-                # bird1.jump()
-                # bird2.jump()
+                bird.jump()
         
         if event.type == Bird.BIRDFLAP:
-            bird0.animate() 
-            # bird1.animate()
-            # bird2.animate()
-    bird0.move()
-    # bird1.move()
-    # bird2.move()
-    pipe.move()
-    floor.move() 
-    if pipe.collide(bird0):
-        print('True')
+            bird.animate() 
     
-    screen.blit(bgSurface,(0,0))
-    pipe.draw(screen)
-    floor.draw()
-    bird0.draw(screen)
+    bird.move()
+    floor.move()
+    for pipe in pipes[:]:
+        pipe.move()
+        if pipe.collide(bird):
+            pygame.quit()
+            sys.exit()
+        if pipe.x + pipeWidth < 0:
+            pipes.remove(pipe)
+         
+            print(pipes)
+    
+    screen.blit(bgSurface,(0,0))         
+    
+
+    for pipe in pipes:
+        pipe.draw(screen)
+    floor.draw(screen)
+    bird.draw(screen)
+    
+    # if pipe.collide(bird):                            
+    #     pygame.quit()
+    #     sys.exit()
     # bird1.draw(screen)
     # bird2.draw(screen)
     pygame.display.flip()
