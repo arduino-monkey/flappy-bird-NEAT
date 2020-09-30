@@ -162,7 +162,7 @@ while True:
         if pipe.x + pipeWidth < 0:
             pipes.remove(pipe)
             
-        if pipe.passed == False and pipe.x < bird.x:
+        if pipe.passed == False and pipe.x + pipeWidth < bird.x:
             score += 1
             pipe.passed = True
             pipes.append(Pipe(432))
@@ -178,10 +178,6 @@ while True:
     scoreText = FONT.render(f'Score: {score}', 1, (255,255,255))
     screen.blit(scoreText, (0,0))
     
-    # if pipe.collide(bird):                            
-    #     pygame.quit()
-    #     sys.exit()
-    # bird1.draw(screen)
-    # bird2.draw(screen)
     pygame.display.flip()
     clock.tick(100)
+
