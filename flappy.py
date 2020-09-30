@@ -1,6 +1,7 @@
 import pygame, sys, random
 
 pygame.init()
+pygame.font.init()
 WIDTH = 432
 HEIGHT = 768
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -13,7 +14,7 @@ def scaleSurface(surface):
     scaledHeight = round(surface.get_height()*times)
     return pygame.transform.scale(surface, (scaledWidth, scaledHeight))
 
-
+FONT = pygame.font.SysFont('comicsans', 40)
 
 bgSurface = pygame.image.load('assets/background-night.png')
 bgSurface = scaleSurface(bgSurface)
@@ -164,7 +165,7 @@ while True:
         if pipe.passed == False and pipe.x < bird.x:
             score += 1
             pipe.passed = True
-            pipes.append(Pipe(400))
+            pipes.append(Pipe(432))
 
     
     screen.blit(bgSurface,(0,0))         
@@ -174,6 +175,8 @@ while True:
         pipe.draw(screen)
     floor.draw(screen)
     bird.draw(screen)
+    scoreText = FONT.render(f'Score: {score}', 1, (255,255,255))
+    screen.blit(scoreText, (0,0))
     
     # if pipe.collide(bird):                            
     #     pygame.quit()
