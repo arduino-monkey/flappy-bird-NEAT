@@ -176,17 +176,27 @@ def main(genomes, config):
                 for bird in birds:
                     bird.animate() 
         
+        # pipeIndex = 0
+        # if len(birds):
+        #     if len(pipes)>1 and birds[0].x > pipes[0].x + pipeWidth:
+        #         pipeIndex = 1
+        # else:
+        #     break
+
         for i, bird in enumerate(birds):
             bird.move()
             ge[i].fitness += 0.01
-            output = nets[i].activate((bird.y, abs(bird.y-pipes[])))
+            if pipes:
+                output = nets[i].activate((bird.y, abs(bird.y-pipes[-1].topPipeY), abs(bird.y-pipes[-1].bottomPipeY)))
+                if output[0] > 0.5:
+                    bird.jump()
         floor.move()
 
         addPipe = False
-        for pipe in pipes[:]:
-            for i,bird in enumerate(birds[:]):
+        for pipe in pipes:
+            for i,bird in enumerate(birds):
                 if pipe.collide(bird):
-                    g[i].fitness -= 1
+                    ge[i].fitness -= 1
                     birds.pop(i)
                     nets.pop(i)
                     ge.pop(i)
@@ -210,7 +220,8 @@ def main(genomes, config):
         for pipe in pipes:
             pipe.draw(screen)
         floor.draw(screen)
-        bird.draw(screen)
+        for bird in birds:
+            bird.draw(screen)
         scoreText = FONT.render(f'Score: {score}', 1, (255,255,255))
         screen.blit(scoreText, (0,0))
         
