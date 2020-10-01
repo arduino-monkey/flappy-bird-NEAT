@@ -78,6 +78,12 @@ class Bird:
         newSurface = pygame.transform.rotozoom(self.surface, -self.movement * 5, 1)
         return newSurface
     
+    def die(self):
+        if  self.rect.top <= -100 or self.rect.bottom >= Floor.y:
+            return True
+        else:
+            return False
+    
     def animate(self):         
         if self.movement <= 3:#flaps only if gowing up 
             if self.index < 2:
@@ -115,7 +121,7 @@ class Pipe:
         birdRect = bird.rect
         bottomCollision = birdRect.colliderect(self.bottomRect)
         topCollision =  birdRect.colliderect(self.topRect)       
-        if  topCollision or bottomCollision or birdRect.top <= -100 or birdRect.bottom >= Floor.y:
+        if  topCollision or bottomCollision:
             return True
         else:
             return False
@@ -156,16 +162,17 @@ def main(genomes, config):
     birds = []
 
     for _, g in genomes:
+        g.fitness = 0
         net = neat.nn.FeedForwardNetwork.create(g, config)
         nets.append(net)
-        birds.append(Bird(50,WIDTH/2))
-        g.fitness = 0
+        birds.append(Bird(50,384))
         ge.append(g)
 
 
     floor = Floor() 
     pipes = [Pipe(700)]
     score = 0
+
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -175,7 +182,6 @@ def main(genomes, config):
             if event.type == Bird.BIRDFLAP:
                 for bird in birds:
                     bird.animate() 
-        
         # pipeIndex = 0
         # if len(birds):
         #     if len(pipes)>1 and birds[0].x > pipes[0].x + pipeWidth:
@@ -185,7 +191,7 @@ def main(genomes, config):
 
         for i, bird in enumerate(birds):
             bird.move()
-            ge[i].fitness += 0.01
+            ge[i].fitness += 0.1
             if pipes:
                 output = nets[i].activate((bird.y, abs(bird.y-pipes[-1].topPipeY), abs(bird.y-pipes[-1].bottomPipeY)))
                 if output[0] > 0.5:
@@ -193,27 +199,25 @@ def main(genomes, config):
         floor.move()
 
         addPipe = False
-        for pipe in pipes:
-            for i,bird in enumerate(birds):
-                if pipe.collide(bird):
-                    ge[i].fitness -= 1
-                    birds.pop(i)
-                    nets.pop(i)
-                    ge.pop(i)
+        for pipe in pipes[:]:
+            pipe.move
+            for bird in birds[:]:
+                if pipe.collide(bird) or bird.die():
+                    birdIndex = birds.index(bird)
+                    ge[birdIndex].fitness -= 1
+                    birds.pop(birdIndex)
+                    nets.pop(birdIndex)
+                    ge.pop(birdIndex)
                 
                 if pipe.passed == False and pipe.x + pipeWidth < bird.x:
                     score += 1
                     pipe.passed = True
-                    pipes.append(Pipe(432))
                     for g in ge:
                         g.fitness += 5
-            
+                    pipes.append(Pipe(WIDTH))            
             if pipe.x + pipeWidth < 0:
                 pipes.remove(pipe)
                 
-            
-            pipe.move()
-        
         screen.blit(bgSurface,(0,0))         
         
 
@@ -227,5 +231,5 @@ def main(genomes, config):
         
         pygame.display.flip()
         clock.tick(100)
-
+        print(len(birds))
 run()
