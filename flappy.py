@@ -1,4 +1,7 @@
-import pygame, sys, random
+try:
+    import pygame, sys, random, neat
+except ModuleNotFoundError as e:
+    print(e)
 
 pygame.init()
 pygame.font.init()
@@ -133,51 +136,68 @@ class Floor:
 
 
 
-bird = Bird(50,HEIGHT/2)                         
-floor = Floor() 
-pipes = [Pipe(700)]
-score = 0
-while True:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
 
-        if event.type == pygame.KEYUP:
-            if event.key == pygame.K_SPACE:
-                bird.jump()
-        
-        if event.type == Bird.BIRDFLAP:
-            bird.animate() 
+
+def run():
+    config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction,
+                        neat.DefaultSpeciesSet, neat.DefaultStagnation,
+                        'config-feedforward.txt')
     
-    bird.move()
-    floor.move()
+    p = neat.Population(config)
+    p.add_reporter(neat.StdOutReporter(True))
+    stats = neat.StatisticsReporter()
+    p.add_reporter(stats)
 
-    addPipe = False
-    for pipe in pipes[:]:
-        pipe.move()
-        if pipe.collide(bird):
-            pygame.quit()
-            sys.exit()
-        if pipe.x + pipeWidth < 0:
-            pipes.remove(pipe)
+    winner = p.run(,50)
+
+def main():
+    bird = Bird(50,HEIGHT/2)                         
+    floor = Floor() 
+    pipes = [Pipe(700)]
+    score = 0
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_SPACE:
+                    bird.jump()
             
-        if pipe.passed == False and pipe.x + pipeWidth < bird.x:
-            score += 1
-            pipe.passed = True
-            pipes.append(Pipe(432))
+            if event.type == Bird.BIRDFLAP:
+                bird.animate() 
+        
+        bird.move()
+        floor.move()
 
-    
-    screen.blit(bgSurface,(0,0))         
-    
+        addPipe = False
+        for pipe in pipes[:]:
+            pipe.move()
+            if pipe.collide(bird):
+                pygame.quit()
+                sys.exit()
+            if pipe.x + pipeWidth < 0:
+                pipes.remove(pipe)
+                
+            if pipe.passed == False and pipe.x + pipeWidth < bird.x:
+                score += 1
+                pipe.passed = True
+                pipes.append(Pipe(432))
 
-    for pipe in pipes:
-        pipe.draw(screen)
-    floor.draw(screen)
-    bird.draw(screen)
-    scoreText = FONT.render(f'Score: {score}', 1, (255,255,255))
-    screen.blit(scoreText, (0,0))
-    
-    pygame.display.flip()
-    clock.tick(100)
+        
+        screen.blit(bgSurface,(0,0))         
+        
 
+        for pipe in pipes:
+            pipe.draw(screen)
+        floor.draw(screen)
+        bird.draw(screen)
+        scoreText = FONT.render(f'Score: {score}', 1, (255,255,255))
+        screen.blit(scoreText, (0,0))
+        
+        pygame.display.flip()
+        clock.tick(100)
+
+run()
+main()
