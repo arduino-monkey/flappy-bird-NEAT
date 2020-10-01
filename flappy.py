@@ -148,7 +148,7 @@ def run():
     stats = neat.StatisticsReporter()
     p.add_reporter(stats)
 
-    winner = p.run(,50)
+    winner = p.run(main ,50)
 
 def main():
     bird = Bird(50,HEIGHT/2)                         
