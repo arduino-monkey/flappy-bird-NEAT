@@ -155,8 +155,8 @@ def main(genomes, config):
     ge = []
     birds = []
 
-    for g in genomes:
-        net = neat.FeedForwardNetwork(g, config)
+    for _, g in genomes:
+        net = neat.nn.FeedForwardNetwork.create(g, config)
         nets.append(net)
         birds.append(Bird(50,WIDTH/2))
         g.fitness = 0
@@ -176,19 +176,27 @@ def main(genomes, config):
                 for bird in birds:
                     bird.animate() 
         
-        bird.move()
+        for i, bird in enumerate(birds):
+            bird.move()
+            ge[i].fitness += 0.01
+            output = nets[i].activate((bird.y, abs(bird.y-pipes[])))
         floor.move()
 
         addPipe = False
         for pipe in pipes[:]:
-            for bird in birds:
+            for i,bird in enumerate(birds[:]):
                 if pipe.collide(bird):
-                    pass
+                    g[i].fitness -= 1
+                    birds.pop(i)
+                    nets.pop(i)
+                    ge.pop(i)
                 
                 if pipe.passed == False and pipe.x + pipeWidth < bird.x:
                     score += 1
                     pipe.passed = True
                     pipes.append(Pipe(432))
+                    for g in ge:
+                        g.fitness += 5
             
             if pipe.x + pipeWidth < 0:
                 pipes.remove(pipe)
@@ -210,4 +218,3 @@ def main(genomes, config):
         clock.tick(100)
 
 run()
-main()
