@@ -150,8 +150,19 @@ def run():
 
     winner = p.run(main ,50)
 
-def main():
-    bird = Bird(50,HEIGHT/2)                         
+def main(genomes, config):
+    nets = []
+    ge = []
+    birds = []
+
+    for g in genomes:
+        net = neat.FeedForwardNetwork(g, config)
+        nets.append(net)
+        birds.append(Bird(50,WIDTH/2))
+        g.fitness = 0
+        ge.append(g)
+
+
     floor = Floor() 
     pipes = [Pipe(700)]
     score = 0
@@ -160,31 +171,30 @@ def main():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-
-            if event.type == pygame.KEYUP:
-                if event.key == pygame.K_SPACE:
-                    bird.jump()
             
             if event.type == Bird.BIRDFLAP:
-                bird.animate() 
+                for bird in birds:
+                    bird.animate() 
         
         bird.move()
         floor.move()
 
         addPipe = False
         for pipe in pipes[:]:
-            pipe.move()
-            if pipe.collide(bird):
-                pygame.quit()
-                sys.exit()
+            for bird in birds:
+                if pipe.collide(bird):
+                    pass
+                
+                if pipe.passed == False and pipe.x + pipeWidth < bird.x:
+                    score += 1
+                    pipe.passed = True
+                    pipes.append(Pipe(432))
+            
             if pipe.x + pipeWidth < 0:
                 pipes.remove(pipe)
                 
-            if pipe.passed == False and pipe.x + pipeWidth < bird.x:
-                score += 1
-                pipe.passed = True
-                pipes.append(Pipe(432))
-
+            
+            pipe.move()
         
         screen.blit(bgSurface,(0,0))         
         
