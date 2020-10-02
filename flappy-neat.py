@@ -1,9 +1,4 @@
-try:
-    import pygame, sys, random, neat
-except ModuleNotFoundError as e:
-    print(e)
-
-
+import pygame, sys, random, neat, os
 
 pygame.init()
 pygame.font.init()
@@ -11,7 +6,7 @@ WIDTH = 432
 HEIGHT = 768
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption('Flappy Bird')
-clock = pygame.time.Clock()
+
 
 def scaleSurface(surface):
     times = 1.5
@@ -99,7 +94,7 @@ class Bird:
 
 class Pipe:
     gap = 200
-    vel = 2
+    vel = 3
 
     def __init__(self, x):
         self.x = x
@@ -126,7 +121,7 @@ class Pipe:
 class Floor:
     x = 0
     y = 675
-    vel = 2
+    vel = 3
     def move(self):
         if Floor.x <= -WIDTH:
             Floor.x = 0
@@ -143,20 +138,23 @@ def main(genomes, config):
     birds = []
     ge = []
 
-    for genomeId, genome in genomes:
-        genome.fitness = 0 
+    for _, genome in genomes:
+        genome.fitness = 0
         net = neat.nn.FeedForwardNetwork.create(genome, config)
         nets.append(net)
-        birds.append(Bird(50,WIDTH/2))
+        birds.append(Bird(50, WIDTH/2))
         ge.append(genome)
 
     floor = Floor() 
-    pipes = [Pipe(700)]
+    pipes = [Pipe(WIDTH)]
     score = 0
-    
-    while True:
+
+    clock = pygame.time.Clock()
+    run = True
+    while run and len(birds):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                run = False
                 pygame.quit()
                 sys.exit()
             
@@ -167,54 +165,73 @@ def main(genomes, config):
         for i, bird in enumerate(birds):
             ge[i].fitness += 0.1
             bird.move()
-            output = nets[i].activate((bird.y, abs(bird.y - pipes.topPipeY), abs(bird.y - pipes.bottomPipeY)))
-            if output[0] > 0.5:
+            output = nets[i].activate((bird.y, abs(bird.y - pipes[0].topPipeY), abs(bird.y - pipes[0].bottomPipeY)))
+
+            if output[0] > 0.9:
                 bird.jump()
-        
         floor.move()
 
         for pipe in pipes[:]:
             pipe.move()
-            for bird in birds:
+            for bird in birds[:]:
                 if bird.collide(pipe):
                     birdIndex = birds.index(bird)
                     ge[birdIndex].fitness -= 1
                     nets.pop(birdIndex)
                     ge.pop(birdIndex)
                     birds.pop(birdIndex)
-            
+
+
             if pipe.passed == False and pipe.x + pipeWidth < 0:
                 pipe.passed == True
                 pipes.append(Pipe(WIDTH))
                 score += 1
+                for g in ge:
+                    g.fitness += 5
                 pipes.pop(0)  
 
-
+        # for bird in birds:
+        #     if bird.rect.top <= -100 or bird.rect.bottom >= Floor.y:
+        #         birdIndex = birds.index(bird)
+        #         nets.pop(birdIndex)
+        #         ge.pop(birdIndex)
+        #         birds.pop(birdIndex)
+            
         screen.blit(bgSurface,(0,0))         
+        
 
         for pipe in pipes:
             pipe.draw(screen)
         floor.draw(screen)
         for bird in birds:
-            bird.draw(screen)
-
+           bird.draw(screen)
         scoreText = FONT.render(f'Score: {score}', 1, (255,255,255))
         screen.blit(scoreText, (0,0))
-        print(len(birds))
-        pygame.display.update()
+        
+        pygame.display.flip()
         clock.tick(100)
-
 
 def run(config_file):
     config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction,
-                         neat.DefaultSpeciesSet, neat.DefaultStagnation,
-                         config_file)
+                                neat.DefaultSpeciesSet, neat.DefaultStagnation,
+                                config_file)
 
+    # Create the population, which is the top-level object for a NEAT run.
     p = neat.Population(config)
+
+    # Add a stdout reporter to show progress in the terminal.
     p.add_reporter(neat.StdOutReporter(True))
     stats = neat.StatisticsReporter()
     p.add_reporter(stats)
-    winner = p.run(main, 50)
+    # p.add_reporter(neat.Checkpointer(5))
+
+    # Run for up to x generations.
+    winner = p.run(main, 100)
+
+    # show final stats
+    print('\nBest genome:\n{!s}'.format(winner))
 
 if __name__ == '__main__':
-    run('config-feedforward.txt')
+    local_dir = os.path.dirname(__file__)
+    config_path = os.path.join(local_dir, 'config-feedforward.txt')
+    run(config_path)
