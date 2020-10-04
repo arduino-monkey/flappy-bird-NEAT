@@ -195,12 +195,12 @@ def main(genomes, config):
                     ge.pop(birdIndex)
                     birds.pop(birdIndex)
 
-                if pipe.x + pipeWidth:
-                    rem.append(pipe)
+            if pipe.x + pipeWidth:
+                rem.append(pipe)
                 
-                if not pipe.passed and pipe.x < bird.x:
-                    pipe.passed = True
-                    addPipe = True
+            if not pipe.passed and pipe.x < bird.x:
+                pipe.passed = True
+                addPipe = True
         
         if addPipe:
             score += 1
@@ -213,7 +213,7 @@ def main(genomes, config):
         
 
         for bird in birds:
-            if bird.rect.top <= -100 or bird.rect.bottom >= Floor.y:
+            if bird.rect.top <= -10 or bird.rect.bottom >= Floor.y:
                 birdIndex = birds.index(bird)
                 nets.pop(birdIndex)
                 ge.pop(birdIndex)
