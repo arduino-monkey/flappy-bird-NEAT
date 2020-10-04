@@ -86,11 +86,16 @@ class Bird:
     def collide(self, pipe):
         bottomCollision = self.rect.colliderect(pipe.bottomRect)
         topCollision =  self.rect.colliderect(pipe.topRect)
-        if topCollision or bottomCollision or self.rect.top <= -100 or self.rect.bottom >= Floor.y:
+        if topCollision or bottomCollision:
             return True
         else:  
             return False
-
+    
+    def boundary(self):
+        if self.rect.top <= -100 or self.rect.bottom >= Floor.y:
+            return True
+        else:
+            return False
 
 class Pipe:
     gap = 200
@@ -157,23 +162,32 @@ def main(genomes, config):
                 run = False
                 pygame.quit()
                 sys.exit()
+                break
             
             if event.type == Bird.BIRDFLAP:
                 for bird in birds:
-                    bird.animate() 
+                    bird.animate()
+
+        pipeIndex = 0
+        if len(birds):
+            if len(pipes) > 1 and birds[0].x > pipes[0].x + pipeWidth:
+                pipeIndex = 1 
         
         for i, bird in enumerate(birds):
-            ge[i].fitness += 0.1
+            ge[i].fitness += 0.03
             bird.move()
-            output = nets[i].activate((bird.y, abs(bird.y - pipes[0].topPipeY), abs(bird.y - pipes[0].bottomPipeY)))
+            output = nets[i].activate((bird.y, abs(bird.y - pipes[pipeIndex].topPipeY), abs(bird.y - pipes[pipeIndex].bottomPipeY)))
 
-            if output[0] > 0.9:
+            if output[0] > 0.5:
                 bird.jump()
         floor.move()
 
-        for pipe in pipes[:]:
+
+        rem = []
+        addPipe = False
+        for pipe in pipes:
             pipe.move()
-            for bird in birds[:]:
+            for bird in birds:
                 if bird.collide(pipe):
                     birdIndex = birds.index(bird)
                     ge[birdIndex].fitness -= 1
@@ -181,21 +195,29 @@ def main(genomes, config):
                     ge.pop(birdIndex)
                     birds.pop(birdIndex)
 
+                if pipe.x + pipeWidth:
+                    rem.append(pipe)
+                
+                if not pipe.passed and pipe.x < bird.x:
+                    pipe.passed = True
+                    addPipe = True
+        
+        if addPipe:
+            score += 1
+            for genome in ge:
+                genome.fitness += 5
+            pipes.append(Pipe(WIDTH))
+        
+        for r in rem:
+            pipes.remove(r)
+        
 
-            if pipe.passed == False and pipe.x + pipeWidth < 0:
-                pipe.passed == True
-                pipes.append(Pipe(WIDTH))
-                score += 1
-                for g in ge:
-                    g.fitness += 5
-                pipes.pop(0)  
-
-        # for bird in birds:
-        #     if bird.rect.top <= -100 or bird.rect.bottom >= Floor.y:
-        #         birdIndex = birds.index(bird)
-        #         nets.pop(birdIndex)
-        #         ge.pop(birdIndex)
-        #         birds.pop(birdIndex)
+        for bird in birds:
+            if bird.rect.top <= -100 or bird.rect.bottom >= Floor.y:
+                birdIndex = birds.index(bird)
+                nets.pop(birdIndex)
+                ge.pop(birdIndex)
+                birds.pop(birdIndex)
             
         screen.blit(bgSurface,(0,0))         
         
@@ -226,7 +248,7 @@ def run(config_file):
     # p.add_reporter(neat.Checkpointer(5))
 
     # Run for up to x generations.
-    winner = p.run(main, 100)
+    winner = p.run(main, 50)
 
     # show final stats
     print('\nBest genome:\n{!s}'.format(winner))
