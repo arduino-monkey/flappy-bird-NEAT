@@ -176,8 +176,8 @@ def main(genomes, config):
         for i, bird in enumerate(birds):
             ge[i].fitness += 0.03
             bird.move()
-            topPipeDist = abs(bird.y - pipes[0].topPipeY)
-            bottomPipeDist = abs(bird.y - pipes[0].bottomPipeY)
+            topPipeDist = abs(bird.y - pipes[pipeIndex].topPipeY)
+            bottomPipeDist = abs(bird.y - pipes[pipeIndex].bottomPipeY)
             output = nets[i].activate((bird.y, topPipeDist ,bottomPipeDist))
 
             if output[0] > 0.5:
@@ -215,7 +215,7 @@ def main(genomes, config):
         
 
         for bird in birds:
-            if bird.rect.top <= -10 or bird.rect.bottom >= Floor.y:
+            if bird.boundary():
                 birdIndex = birds.index(bird)
                 nets.pop(birdIndex)
                 ge.pop(birdIndex)
