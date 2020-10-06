@@ -61,7 +61,8 @@ class Bird:
     
     def move(self):
         self.movement += Bird.gravity
-        self.rect.centery += self.movement
+        self.y += self.movement
+        self.rect.centery = self.y
     
     def jump(self):
         self.movement = 0
